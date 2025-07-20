@@ -1,3 +1,5 @@
+ #!/usr/bin/env python3
+""" Test file for client.py & fixtures.py """
 import unittest
 import client
 import fixtures
@@ -73,7 +75,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Configure le mock pour requests.get"""
-        
+
         cls.get_patcher = patch('requests.get')
         cls.mock_get = cls.get_patcher.start()
 
