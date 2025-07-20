@@ -123,7 +123,7 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             )
         ]
         self.mock_get.assert_has_calls(expected_calls)
-    
+
     def test_public_repos_with_license(self):
         """
         Test the public_repos method with a license argument
