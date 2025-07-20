@@ -114,7 +114,6 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
         result = github_client.public_repos()
 
         self.assertEqual(result, self.expected_repos)
-        
         expected_calls = [
             unittest.mock.call(
                 f"https://api.github.com/orgs/{a}"
