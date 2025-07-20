@@ -21,8 +21,6 @@ class TestGithubOrgClient(unittest.TestCase):
         2. Returns correct result
         """
         test_payload = {
-            "login": org_name,
-            "id": 123,
             "repos_url": f"https://api.github.com/orgs/{org_name}/repos"
         }
         mock_get_json.return_value = test_payload
