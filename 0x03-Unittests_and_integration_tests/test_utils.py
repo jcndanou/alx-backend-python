@@ -15,7 +15,7 @@ class TestAccessNestedMap(unittest.TestCase):
         ({"a": {"b": 2}}, ("a", "b"), 2),
     ])
     def test_access_nested_map(self, nested_map, path, expected_result):
-        """Teste que la fonction renvoie le bon résultat pour différents inputs."""
+        """Teste que la fonction renvoie le bon résultat."""
         result = utils.access_nested_map(nested_map, path)
         self.assertEqual(result, expected_result)
 
@@ -23,7 +23,7 @@ class TestAccessNestedMap(unittest.TestCase):
         ({}, ("a",), "a"),
         ({"a": 1}, ("a", "b"), "b"),
     ])
-    def test_access_nested_map_exception(self, nested_map, path, expected_message):
+    def test_access_nested_map_e(self, nested_map, path, expected_message):
         """Teste que KeyError est levée avec le bon message."""
         with self.assertRaises(KeyError) as cm:
             utils.access_nested_map(nested_map, path)
