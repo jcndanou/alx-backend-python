@@ -123,3 +123,23 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
             )
         ]
         self.mock_get.assert_has_calls(expected_calls)
+    
+    def test_public_repos_with_license(self):
+        """
+        Test the public_repos method with a license argument
+        and ensure the result matches the expected value from the fixtures.
+        """
+        a = self.org_payload['login']
+        github_client = client.GithubOrgClient(a)
+        result = github_client.public_repos(license="apache-2.0")
+        self.assertEqual(result, self.apache2_repos)
+        expected_calls = [
+            unittest.mock.call(
+                f"https://api.github.com/orgs/{a}"
+            ),
+            unittest.mock.call(
+                f"https://api.github.com/orgs/{a}/repos"
+            )
+        ]
+        self.mock_get.assert_has_calls(expected_calls, any_order=True)
+        self.mock_get.reset_mock()
