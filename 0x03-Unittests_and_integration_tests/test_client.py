@@ -93,9 +93,10 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
         def side_effect_func(url):
             mock_response = Mock()
-            if url == f"https://api.github.com/orgs/{cls.org_payload['login']}":
+            a = cls.org_payload['login']
+            if url == f"https://api.github.com/orgs/{a}":
                 mock_response.json.return_value = cls.org_payload
-            elif url == f"https://api.github.com/orgs/{cls.org_payload['login']}/repos":
+            elif url == f"https://api.github.com/orgs/{a}/repos":
                 mock_response.json.return_value = cls.repos_payload
             return mock_response
 
@@ -108,16 +109,18 @@ class TestIntegrationGithubOrgClient(unittest.TestCase):
 
     def test_public_repos_integration(self):
         """Test public_repos integration."""
-        github_client = client.GithubOrgClient(self.org_payload['login'])
+        a = self.org_payload['login']
+        github_client = client.GithubOrgClient(a)
         result = github_client.public_repos()
 
         self.assertEqual(result, self.expected_repos)
+        
         expected_calls = [
             unittest.mock.call(
-                f"https://api.github.com/orgs/{self.org_payload['login']}"
+                f"https://api.github.com/orgs/{a}"
             ),
             unittest.mock.call(
-                f"https://api.github.com/orgs/{self.org_payload['login']}/repos"
+                f"https://api.github.com/orgs/{a}/repos"
             )
         ]
         self.mock_get.assert_has_calls(expected_calls)
