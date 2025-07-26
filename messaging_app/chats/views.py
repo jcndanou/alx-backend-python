@@ -1,6 +1,7 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
+from django_filters import rest_framework as filters
 from .models import User, Conversation, Message
 from .serializers import (
     UserSerializer,
@@ -9,6 +10,32 @@ from .serializers import (
     MessageSerializer,
     MessageDetailSerializer
 )
+# Ajoutez ces classes de filtres
+class UserFilter(filters.FilterSet):
+    class Meta:
+        model = User
+        fields = {
+            'email': ['exact', 'contains'],
+            'role': ['exact'],
+            'created_at': ['gte', 'lte'],
+        }
+
+class ConversationFilter(filters.FilterSet):
+    class Meta:
+        model = Conversation
+        fields = {
+            'participants': ['exact'],
+            'created_at': ['gte', 'lte'],
+        }
+
+class MessageFilter(filters.FilterSet):
+    class Meta:
+        model = Message
+        fields = {
+            'sender': ['exact'],
+            'conversation': ['exact'],
+            'sent_at': ['gte', 'lte'],
+        }
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
