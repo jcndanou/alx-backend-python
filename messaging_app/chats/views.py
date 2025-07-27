@@ -4,6 +4,8 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.exceptions import PermissionDenied
+from django.http import Http404
 
 from .filters import MessageFilter, ConversationFilter
 from .pagination import MessagePagination
@@ -43,22 +45,6 @@ class ConversationViewSet(viewsets.ModelViewSet):
             return Conversation.objects.filter(participants=self.request.user).order_by('-created_at')
         return Conversation.objects.none() # Aucun résultat si non authentifié
 
-    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsParticipantOfConversation])
-    def send_message(self, request, pk=None):
-        conversation = get_object_or_404(Conversation, pk=pk)
-        # La permission IsParticipantOfConversation gère déjà si l'utilisateur est participant
-
-        serializer = MessageSerializer(data=request.data)
-        if serializer.is_valid():
-            # L'expéditeur du message est l'utilisateur authentifié
-            message = Message.objects.create(
-                conversation=conversation,
-                sender=self.request.user, # Utilisez self.request.user comme expéditeur
-                message_body=serializer.validated_data['message_body']
-            )
-            return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def get_serializer_class(self):
         """Utilise le serializer détaillé pour la récupération"""
         if self.action == 'retrieve':
@@ -85,6 +71,38 @@ class ConversationViewSet(viewsets.ModelViewSet):
                 {'error': 'User not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+    def get_object(self):
+        """Surcharge pour vérifier explicitement les permissions avec conversation_id"""
+        try:
+            obj = super().get_object()
+            # Vérification explicite de la participation
+            if not obj.participants.filter(id=self.request.user.id).exists():
+                raise PermissionDenied("You are not a participant of this conversation")
+            return obj
+        except Http404:
+            # Si la conversation n'existe pas, retourner 403 au lieu de 404 pour la sécurité
+            raise PermissionDenied("Conversation not found or access denied")
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsParticipantOfConversation])
+    def send_message(self, request, pk=None):
+        conversation = self.get_object()  # Utilise get_object qui vérifie déjà les permissions
+        
+        # Vérification redondante pour être explicite (optionnel mais recommandé)
+        if not conversation.participants.filter(id=request.user.id).exists():
+            return Response(
+                {"detail": "You are not a participant of this conversation"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        serializer = MessageSerializer(data=request.data)
+        if serializer.is_valid():
+            message = Message.objects.create(
+                conversation=conversation,
+                sender=request.user,
+                message_body=serializer.validated_data['message_body']
+            )
+            return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = Message.objects.all().order_by('-sent_at')
@@ -112,12 +130,37 @@ class MessageViewSet(viewsets.ModelViewSet):
         """Définit automatiquement l'expéditeur"""
         serializer.save(sender=self.request.user)
 
+    def get_object(self):
+        """Surcharge pour vérifier explicitement les permissions avec conversation_id"""
+        try:
+            obj = super().get_object()
+            # Vérification explicite que l'utilisateur est participant de la conversation
+            if not obj.conversation.participants.filter(id=self.request.user.id).exists():
+                raise PermissionDenied("You are not a participant of this conversation")
+            return obj
+        except Http404:
+            # Si le message n'existe pas, retourner 403 au lieu de 404 pour la sécurité
+            raise PermissionDenied("Message not found or access denied")
+
     @action(detail=True, methods=['get'])
     def conversation_messages(self, request, pk=None):
         """Récupère tous les messages d'une conversation spécifique"""
-        conversation = self.get_object()
-        messages = Message.objects.filter(
-            conversation=conversation
-        ).order_by('sent_at')
-        serializer = self.get_serializer(messages, many=True)
-        return Response(serializer.data)
+        try:
+            # Récupération explicite avec vérification de permission
+            conversation = Conversation.objects.get(pk=pk)
+            if not conversation.participants.filter(id=request.user.id).exists():
+                return Response(
+                    {"detail": "You are not a participant of this conversation"},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            messages = Message.objects.filter(
+                conversation=conversation
+            ).order_by('sent_at')
+            serializer = self.get_serializer(messages, many=True)
+            return Response(serializer.data)
+        except Conversation.DoesNotExist:
+            return Response(
+                {"detail": "Conversation not found"},
+                status=status.HTTP_404_NOT_FOUND
+            )

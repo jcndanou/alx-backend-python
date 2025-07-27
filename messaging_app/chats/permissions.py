@@ -1,31 +1,44 @@
+# chats/permissions.py
 from rest_framework import permissions
 from chats import models
 
 class IsParticipantOfConversation(permissions.BasePermission):
     """
-    Custom permission to allow only participants of a conversation to view, update,
-    delete messages within that conversation, or access the conversation itself.
+    Custom permission to allow only participants of a conversation to interact with it.
     """
     message = 'You are not a participant of this conversation.'
 
     def has_permission(self, request, view):
-        if not request.user or not request.user.is_authenticated:
+        # Allow only authenticated users
+        if not request.user.is_authenticated:
             return False
-        return True
+
+        # Handle each method type specifically
+        if request.method == 'POST':
+            # For message/conversation creation
+            if hasattr(view, 'get_conversation'):  # For message creation
+                conversation = view.get_conversation()
+                return request.user in conversation.participants.all()
+            return True  # For conversation creation (handled in perform_create)
+
+        elif request.method in ['GET', 'PUT', 'PATCH', 'DELETE']:
+            # These methods will be checked at object level
+            return True
+
+        return False  # Block any other methods
 
     def has_object_permission(self, request, view, obj):
         """
         Object-level permission to check if the user is a participant.
-        'obj' will be a Conversation or Message instance.
+        Handles GET, PUT, PATCH, DELETE methods specifically.
         """
-        # S'assurer que l'utilisateur est authentifié
-        if not request.user or not request.user.is_authenticated:
-            return False
-
+        # Check participant status based on object type
         if isinstance(obj, models.Conversation):
-            # Pour une conversation, l'utilisateur doit être un participant
             return request.user in obj.participants.all()
         elif isinstance(obj, models.Message):
-            # Pour un message, l'utilisateur doit être un participant de la conversation du message
             return request.user in obj.conversation.participants.all()
         return False
+
+    def _check_conversation_participation(self, user, conversation):
+        """Helper method to check if user is conversation participant"""
+        return user in conversation.participants.all()
