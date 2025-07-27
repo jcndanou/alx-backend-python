@@ -1,7 +1,13 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django_filters import rest_framework as filters
+from django.shortcuts import get_object_or_404
+from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import DjangoFilterBackend
+
+from .filters import MessageFilter, ConversationFilter
+from .pagination import MessagePagination
+from .permissions import IsParticipantOfConversation
 from .models import User, Conversation, Message
 from .serializers import (
     UserSerializer,
@@ -10,32 +16,7 @@ from .serializers import (
     MessageSerializer,
     MessageDetailSerializer
 )
-# Ajoutez ces classes de filtres
-class UserFilter(filters.FilterSet):
-    class Meta:
-        model = User
-        fields = {
-            'email': ['exact', 'contains'],
-            'role': ['exact'],
-            'created_at': ['gte', 'lte'],
-        }
 
-class ConversationFilter(filters.FilterSet):
-    class Meta:
-        model = Conversation
-        fields = {
-            'participants': ['exact'],
-            'created_at': ['gte', 'lte'],
-        }
-
-class MessageFilter(filters.FilterSet):
-    class Meta:
-        model = Message
-        fields = {
-            'sender': ['exact'],
-            'conversation': ['exact'],
-            'sent_at': ['gte', 'lte'],
-        }
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -51,11 +32,32 @@ class UserViewSet(viewsets.ModelViewSet):
 class ConversationViewSet(viewsets.ModelViewSet):
     queryset = Conversation.objects.all()
     serializer_class = ConversationSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ConversationFilter
 
     def get_queryset(self):
         """Ne retourne que les conversations de l'utilisateur connecté"""
-        return Conversation.objects.filter(participants=self.request.user)
+        if self.request.user.is_authenticated:
+            # Filtrer les conversations où l'utilisateur est un participant
+            return Conversation.objects.filter(participants=self.request.user).order_by('-created_at')
+        return Conversation.objects.none() # Aucun résultat si non authentifié
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated, IsParticipantOfConversation])
+    def send_message(self, request, pk=None):
+        conversation = get_object_or_404(Conversation, pk=pk)
+        # La permission IsParticipantOfConversation gère déjà si l'utilisateur est participant
+
+        serializer = MessageSerializer(data=request.data)
+        if serializer.is_valid():
+            # L'expéditeur du message est l'utilisateur authentifié
+            message = Message.objects.create(
+                conversation=conversation,
+                sender=self.request.user, # Utilisez self.request.user comme expéditeur
+                message_body=serializer.validated_data['message_body']
+            )
+            return Response(MessageSerializer(message).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def get_serializer_class(self):
         """Utilise le serializer détaillé pour la récupération"""
@@ -85,15 +87,20 @@ class ConversationViewSet(viewsets.ModelViewSet):
             )
 
 class MessageViewSet(viewsets.ModelViewSet):
-    queryset = Message.objects.all()
+    queryset = Message.objects.all().order_by('-sent_at')
     serializer_class = MessageSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsParticipantOfConversation]
+    pagination_class = MessagePagination
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = MessageFilter
 
     def get_queryset(self):
-        """Filtre les messages visibles par l'utilisateur"""
-        return Message.objects.filter(
-            conversation__participants=self.request.user
-        ).order_by('-sent_at')
+        """Filtre les messages visibles par l'utilisateur où l'utilisateur est participant"""
+        if self.request.user.is_authenticated:
+            return Message.objects.filter(
+                conversation__participants=self.request.user
+            ).order_by('sent_at') # Les messages d'une conversation doivent être triés par date
+        return Message.objects.none()
 
     def get_serializer_class(self):
         """Utilise le serializer détaillé pour la récupération"""
