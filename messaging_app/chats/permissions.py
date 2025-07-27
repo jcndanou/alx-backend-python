@@ -9,11 +9,9 @@ class IsParticipantOfConversation(permissions.BasePermission):
     message = 'You are not a participant of this conversation.'
 
     def has_permission(self, request, view):
-        # Allow POST (create) for new messages/conversations if authenticated
-        # or allow listing of conversations if authenticated.
-        if request.user and request.user.is_authenticated:
-            return True
-        return False
+        if not request.user or not request.user.is_authenticated:
+            return False
+        return True
 
     def has_object_permission(self, request, view, obj):
         """
