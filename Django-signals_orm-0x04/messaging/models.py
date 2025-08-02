@@ -6,13 +6,13 @@ User = get_user_model()
 
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    receiver  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)
 
     def __str__(self):
-        return f"Message {self.id} from {self.sender} to {self.recipient}"
+        return f"Message {self.id} from {self.sender} to {self.receiver }"
 
 
 class Notification(models.Model):
