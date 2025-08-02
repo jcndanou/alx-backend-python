@@ -6,13 +6,31 @@ User = get_user_model()
 
 class Message(models.Model):
     sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_messages')
-    receiver  = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    receiver = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)
+    edited = models.BooleanField(default=False)  # Nouveau champ ajouté
 
     def __str__(self):
-        return f"Message {self.id} from {self.sender} to {self.receiver }"
+        return f"Message {self.id} from {self.sender} to {self.receiver}"
+
+    class Meta:
+        ordering = ['-timestamp']
+
+
+class MessageHistory(models.Model):
+    """Modèle pour stocker l'historique des modifications des messages"""
+    message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='history')
+    old_content = models.TextField()
+    modified_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Message Histories"
+        ordering = ['-modified_at']
+
+    def __str__(self):
+        return f"History for Message {self.message.id} ({self.modified_at})"
 
 
 class Notification(models.Model):
