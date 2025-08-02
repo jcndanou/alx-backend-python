@@ -5,6 +5,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
+from django.views.decorators.cache import cache_page
 from django.http import Http404
 
 from .filters import MessageFilter, ConversationFilter
@@ -19,6 +20,12 @@ from .serializers import (
     MessageDetailSerializer
 )
 
+@cache_page(60) # Cache la vue pour 60 secondes
+def conversation_detail_view(request, conversation_id):
+    # ... Votre logique de vue pour récupérer les messages de la conversation ...
+    messages = Message.objects.filter(conversation_id=conversation_id).select_related('sender')
+    context = {'messages': messages}
+    return render(request, 'chats/conversation_detail.html', context)
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
