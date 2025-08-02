@@ -1,0 +1,20 @@
+2025-08-02 10:48:31.165462 - User: Anonymous - Path: /
+Not Found: /
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\messaging_app\settings.py changed, reloading.
+C:\Users\jcnda\Documents\GitHub\alx-backend-python\Django-Middleware-0x03\chats\middleware.py changed, reloading.
+2025-08-02 11:01:22.378907 - User: Anonymous - Path: /admin
+2025-08-02 11:01:22.391473 - User: Anonymous - Path: /admin/
+Forbidden: /admin/
+2025-08-02 11:01:41.548273 - User: Anonymous - Path: /api/admin_actions/
+Forbidden: /api/admin_actions/
+2025-08-02 11:06:16.465394 - User: Anonymous - Path: /
+Not Found: /
