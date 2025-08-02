@@ -11,9 +11,9 @@ def create_message_notification(sender, instance, created, **kwargs):
     """
     Crée une notification lorsqu'un nouveau message est reçu
     """
-    if created:
+    if created and instance.receiver != instance.sender:  # On ne notifie pas si l'utilisateur s'envoie un message
         Notification.objects.create(
-            user=instance.recipient,
+            user=instance.receiver,  # Correction: utiliser receiver au lieu de recipient
             message=instance,
             notification_type='MESSAGE',
             message_preview=f"New message from {instance.sender.username}: {instance.content[:50]}..."
