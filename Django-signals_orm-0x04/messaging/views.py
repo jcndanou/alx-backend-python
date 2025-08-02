@@ -74,9 +74,10 @@ def conversation(request, user_id):
 def inbox_view(request):
     """
     Vue pour afficher les messages non lus avec optimisation des requêtes
+    Utilise le manager personnalisé comme spécifié
     """
-    # Utilisation du manager personnalisé avec .only() pour optimiser
-    unread_messages = Message.unread.for_user(request.user).select_related(
+    # Utilisation du manager personnalisé avec la méthode exacte demandée
+    unread_messages = Message.unread.unread_for_user(request.user).select_related(
         'sender'
     ).only(
         'sender__username',
