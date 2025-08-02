@@ -5,10 +5,18 @@ from django.contrib.auth import get_user_model
 from django.views.decorators.http import require_POST
 from django.shortcuts import render, get_object_or_404
 from django.core.cache import cache
+from django.views.decorators.cache import cache_page
 from django.db.models import Count, Q
 from .models import Message, Notification
 
 User = get_user_model()
+
+@cache_page(60) # Cache la vue pour 60 secondes
+def conversation_detail_view(request, conversation_id):
+    # ... Votre logique de vue pour récupérer les messages de la conversation ...
+    messages = Message.objects.filter(conversation_id=conversation_id).select_related('sender')
+    context = {'messages': messages}
+    return render(request, 'chats/conversation_detail.html', context)
 
 @require_POST
 @login_required
