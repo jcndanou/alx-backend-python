@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Messages non lus</h2>
+
+{% if unread_messages %}
+<ul class="message-list">
+    {% for message in unread_messages %}
+    <li class="message">
+        <div class="message-header">
+            <span class="sender">{{ message.sender.username }}</span>
+            <span class="timestamp">{{ message.timestamp }}</span>
+        </div>
+        <div class="message-content">
+            {{ message.content }}
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p>Vous n'avez aucun message non lu.</p>
+{% endif %}
+{% endblock %}

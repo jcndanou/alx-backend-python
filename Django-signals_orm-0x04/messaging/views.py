@@ -68,3 +68,23 @@ def conversation(request, user_id):
         'messages': messages,
         'other_user': other_user
     })
+
+
+@login_required
+def inbox_view(request):
+    """
+    Vue pour afficher les messages non lus avec optimisation des requêtes
+    """
+    # Utilisation du manager personnalisé avec .only() pour optimiser
+    unread_messages = Message.unread.for_user(request.user).select_related(
+        'sender'
+    ).only(
+        'sender__username',
+        'content',
+        'timestamp',
+        'read'
+    ).order_by('-timestamp')
+
+    return render(request, 'messaging/inbox.html', {
+        'unread_messages': unread_messages
+    })
