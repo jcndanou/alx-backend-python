@@ -10,7 +10,11 @@ class Message(models.Model):
     content = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
     read = models.BooleanField(default=False)
-    edited = models.BooleanField(default=False)  # Nouveau champ ajouté
+    edited = models.BooleanField(default=False)
+    edited_at = models.DateTimeField(null=True, blank=True)  # Nouveau champ
+    edited_by = models.ForeignKey(User, on_delete=models.SET_NULL,
+                                null=True, blank=True,
+                                related_name='edited_messages')  # Nouveau champ
 
     def __str__(self):
         return f"Message {self.id} from {self.sender} to {self.receiver}"
@@ -24,6 +28,9 @@ class MessageHistory(models.Model):
     message = models.ForeignKey(Message, on_delete=models.CASCADE, related_name='history')
     old_content = models.TextField()
     modified_at = models.DateTimeField(auto_now_add=True)
+    modified_by = models.ForeignKey(User, on_delete=models.SET_NULL,
+                                  null=True, blank=True,
+                                  related_name='message_modifications')  # Nouveau champ
 
     class Meta:
         verbose_name_plural = "Message Histories"
