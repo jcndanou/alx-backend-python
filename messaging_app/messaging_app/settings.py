@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 from datetime import timedelta
 
@@ -77,13 +78,23 @@ WSGI_APPLICATION = 'messaging_app.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
+"""DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
-}
+}"""
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.environ.get('MYSQL_DATABASE'), # Nom de la base de données
+        'USER': os.environ.get('MYSQL_USER'),     # Nom d'utilisateur de la base de données
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD'), # Mot de passe de la base de données
+        'HOST': 'db', # IMPORTANT: Le nom du service Docker Compose pour la base de données
+        'PORT': '3306', # Port par défaut de MySQL
+    }
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
