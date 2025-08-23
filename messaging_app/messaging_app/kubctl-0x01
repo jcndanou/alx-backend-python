@@ -1,0 +1,5 @@
+#!/bin/bash
+# Increase the number of replicas to 3
+kubectl scale deployment/messaging-app-deployment --replicas=3
+# Verify that the pods are running
+kubectl get pods

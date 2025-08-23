@@ -1,0 +1,5 @@
+#!/bin/bash
+kubectl apply -f blue_deployment.yaml
+kubectl apply -f green_deployment.yaml
+# Check logs of the new green pods
+kubectl logs -l version=green
