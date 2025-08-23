@@ -1,5 +1,28 @@
 #!/bin/bash
+
 # Increase the number of replicas to 3
+echo "Scaling the deployment to 3 replicas..."
 kubectl scale deployment/messaging-app-deployment --replicas=3
-# Verify that the pods are running
-kubectl get pods
+
+# Verify that 3 pods are running
+echo "Verifying that multiple pods are running..."
+kubectl get pods -l app=messaging-app
+
+# Wait for pods to be ready (optional, but good practice)
+echo "Waiting for pods to be ready..."
+kubectl wait --for=condition=ready pod -l app=messaging-app --timeout=120s
+
+# Perform load testing using wrk
+# You need to find the Service IP. Replace <SERVICE_IP> with the actual IP.
+# If using Minikube, you can get it with: minikube service messaging-app-service --url
+# This command runs for 30 seconds with 4 threads and 200 connections.
+echo "Performing load testing with wrk..."
+wrk -t4 -c200 -d30s http://<SERVICE_IP>:8000
+
+# Monitor resource usage of the pods
+# Note: You may need to enable the metrics server in Minikube first:
+# minikube addons enable metrics-server
+echo "Monitoring resource usage with kubectl top..."
+kubectl top pods -l app=messaging-app
+
+echo "Script completed."
