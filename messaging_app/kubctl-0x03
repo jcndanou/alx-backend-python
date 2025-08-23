@@ -1,0 +1,9 @@
+#!/bin/bash
+# Apply the updated deployment file
+kubectl apply -f blue_deployment.yaml
+# Monitor the rolling update progress
+kubectl rollout status deployment/messaging-app-deployment
+# Continuously send requests to check for downtime
+curl <service-ip>:8000
+# Verify the update is complete by checking the pods
+kubectl get pods

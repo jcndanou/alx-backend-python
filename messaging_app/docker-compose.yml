@@ -1,4 +1,4 @@
-# messaging_app/docker-compose.yml (MODIFIÉ)
+# messaging_app/docker-compose.yml
 
 version: '3.8'
 
