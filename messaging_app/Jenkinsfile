@@ -1,27 +1,39 @@
-// Jenkinsfile
+// Jenkinsfile amélioré
 pipeline {
     agent any
     stages {
         stage('Pulling Code') {
             steps {
-                git 'https://github.com/jcndanou/alx-backend-python.git'
+                git branch: 'main',
+                    url: 'https://github.com/jcndanou/alx-backend-python.git',
+                    credentialsId: 'github-credentials' // Si authentication requise
+            }
+        }
+        stage('Install Dependencies') {
+            steps {
+                sh '''
+                    cd messaging_app
+                    pip3 install -r requirements.txt
+                '''
             }
         }
         stage('Testing') {
             steps {
-                sh 'pip install -r requirements.txt'
-                sh 'pytest --junitxml=test-reports/report.xml'
+                sh '''
+                    cd messaging_app
+                    mkdir -p test-reports
+                    pytest --junitxml=test-reports/report.xml
+                '''
             }
-        }
-        stage('Publishing Test Report') {
-            steps {
-                sh 'pytest --junitxml=test-reports/report.xml'
+            post {
+                always {
+                    junit 'messaging_app/test-reports/report.xml'
+                }
             }
         }
         stage('Build Docker Image') {
             steps {
                 script {
-                    // withCredentials permet d'utiliser les identifiants stockés dans Jenkins
                     withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
                         sh 'docker build -t my-app-image:latest .'
                         sh "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
